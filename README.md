@@ -43,7 +43,7 @@ async def command_start_handler(message: Message) -> None:
     )
 
 
-@dp.callback_query(F.data.startswith("pag"))
+@dp.callback_query(F.data.startswith("pagination"))
 async def echo_handler(callback_query: CallbackQuery) -> None:
     await paginator.send_paginated(
         callback_query.bot,
