@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "telepager"
+version = "0.1.0"
+description = ""
+authors = ["prostomarkeloff"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+telegrinder = "^0.3.0.post1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
