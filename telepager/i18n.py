@@ -1,10 +1,9 @@
 import typing
 import enum
-import abc
 
 type LANG_CODE = str
 type I18N_Text = str | typing.Callable[[LANG_CODE], str]
-DEFAULT_LANG_CODE = "ru"  # so i am
+DEFAULT_LANG_CODE = "en"
 
 
 def internationalize(text: I18N_Text, language_code: LANG_CODE) -> str:
@@ -18,19 +17,10 @@ class PossibleTexts(enum.Enum):
     QUALITIES = enum.auto()
     ALL_QUALITIES = enum.auto()
 
-
-class ABCI18N(abc.ABC):
-    @abc.abstractmethod
-    def get_for(self, language_code: LANG_CODE, needed: PossibleTexts) -> str: ...
-
-
-_default_i18n = {
+DEFAULT_I18N = {
     PossibleTexts.ORDERING: {"ru": "Сортировка", "en": "Ordering"},
     PossibleTexts.QUALITIES: {"ru": "Фильтры", "en": "Filters"},
     PossibleTexts.ALL_QUALITIES: {"ru": "Все", "en": "All"},
 }
 
-
-class DefaultI18N(ABCI18N):
-    def get_for(self, language_code: LANG_CODE, needed: PossibleTexts) -> str:
-        return _default_i18n[needed][language_code]
+type PaginatorInternalI18N = dict[PossibleTexts, dict[LANG_CODE, str]]

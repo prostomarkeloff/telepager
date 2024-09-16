@@ -12,7 +12,7 @@ from ._compat import (
     edit_message,
     merge_keyboards,
 )
-from .i18n import DefaultI18N, I18N_Text, internationalize, ABCI18N
+from .i18n import DEFAULT_I18N, DEFAULT_LANG_CODE, I18N_Text, internationalize, PaginatorInternalI18N
 from .structs import FORCE_FETCH_ALL, PageBook, PaginationMessage
 
 from .design import add_filters_buttons, add_navigation_buttons, add_ordering_buttons
@@ -24,7 +24,7 @@ FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
 
 @dataclasses.dataclass
 class PaginatorSettings:
-    i18n: ABCI18N = dataclasses.field(default_factory=DefaultI18N)
+    i18n: PaginatorInternalI18N = dataclasses.field(default_factory=lambda: DEFAULT_I18N)
 
     page_size: int = 10
     incremental_fetching: bool = False
@@ -82,7 +82,7 @@ class Paginator[T]:
         self.storage = ExpiringStorage[T]()
 
         if not settings:
-            settings = PaginatorSettings(i18n=DefaultI18N())
+            settings = PaginatorSettings()
 
         self.settings = settings
 
@@ -151,7 +151,7 @@ class Paginator[T]:
         fetcher_iter: FetcherIter[T],
         builder: ABCPageBuilder[T],
         empty_page_book_text: I18N_Text | None = None,
-        language_code: str = "ru",
+        language_code: str = DEFAULT_LANG_CODE,
         extend_keyboard: KeyboardT | None = None,
         ttl: datetime.timedelta = FOREVER,
         **send_message_kwargs: typing.Any,

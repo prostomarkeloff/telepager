@@ -4,7 +4,7 @@ import typing
 from ._compat import KeyboardT, get_inline_button, add_button_to_keyboard
 
 from .manager import PageBook
-from .flag import ANY_QUALITY, FLAG_T
+from .flag import ANY_ORDERING, ANY_QUALITY, FLAG_T
 from .i18n import PossibleTexts
 
 from .structs import FORCE_FETCH_ALL, PaginationMessage
@@ -38,7 +38,7 @@ def add_ordering_buttons[T](
             current_keyboard,
             get_inline_button(
                 framework=settings.framework,
-                text=f"{settings.i18n.get_for(language_code, PossibleTexts.ORDERING)} ⬇️",
+                text=f"{settings.i18n[PossibleTexts.ORDERING][language_code]} ⬇️",
                 callback_data=message,
             ),
         ).row()
@@ -58,10 +58,11 @@ def add_ordering_buttons[T](
             current_keyboard,
             get_inline_button(
                 framework=settings.framework,
-                text=f"{settings.i18n.get_for(language_code, PossibleTexts.ORDERING)} ⬆️",
+                text=f"{settings.i18n[PossibleTexts.ORDERING][language_code]} ⬆️",
                 callback_data=message,
             ),
         ).row()
+
 
         for ordering in ordering_t:
             if ordering.value == pagination_message.ordering:
@@ -115,7 +116,7 @@ def add_filters_buttons[T](
             current_keyboard,
             get_inline_button(
                 framework=settings.framework,
-                text=f"{settings.i18n.get_for(language_code, PossibleTexts.QUALITIES)} ⬇️",
+                text=f"{settings.i18n[PossibleTexts.QUALITIES][language_code]} ⬇️",
                 callback_data=message,
             ),
         ).row()
@@ -135,17 +136,17 @@ def add_filters_buttons[T](
             current_keyboard,
             get_inline_button(
                 framework=settings.framework,
-                text=f"{settings.i18n.get_for(language_code, PossibleTexts.QUALITIES)} ⬇️",
+                text=f"{settings.i18n[PossibleTexts.QUALITIES][language_code]} ⬇️",
                 callback_data=message,
             ),
         ).row()
 
         if pagination_message.quality == ANY_QUALITY:
-            all_qualities_text = f"📍 {settings.i18n.get_for(language_code, PossibleTexts.ALL_QUALITIES)}"
+            all_qualities_text = f"📍 {settings.i18n[PossibleTexts.ALL_QUALITIES][language_code]}"
             all_qualities_callback_data = settings.noop_callback_data
         else:
             all_qualities_text = (
-                f"{settings.i18n.get_for(language_code, PossibleTexts.ALL_QUALITIES)}"
+                f"{settings.i18n[PossibleTexts.ALL_QUALITIES][language_code]}"
             )
             all_qualities_callback_data = PaginationMessage(
                 page=0,

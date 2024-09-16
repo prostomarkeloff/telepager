@@ -92,7 +92,7 @@ class ABCPageBuilder[T](abc.ABC):
     Used by paginator when PageBook for _some_ quality is empty.
     """
 
-    async def order_by(self, lines: list[Line[T]], asked_ordering: int):
+    async def order_by(self, lines: list[Line[T]], asked_ordering: int) -> None:
         """
         the child should implement sorting in-place on `lines`
         """
