@@ -14,4 +14,4 @@ Telepager works both with [telegrinder](https://github.com/timoniq/telegrinder) 
 Look at [examples](./examples). They give both basic knowdedge of telepager and advanced usage too.
 
 
-![img](https://imgur.com/jveuNyV)
+![img](https://i.imgur.com/jveuNyV.png)
