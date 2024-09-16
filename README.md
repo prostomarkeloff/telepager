@@ -5,7 +5,6 @@ No need to code pagination yourself again and again.
 ```bash
 pip install telepager
 # or
-
 poetry add telepager
 ```
 
