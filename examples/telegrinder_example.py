@@ -8,31 +8,20 @@ from telegrinder import (
     InlineButton,
 )
 from telegrinder.modules import logger
-from telegrinder.rules import StartCommand, CallbackQueryRule
+from telegrinder.rules import StartCommand
+from telepager import PaginationMessage
+from telepager import TelepagerMessage, setup_empty_callback_data_handler
 
-from filtered import (
+from .filtered import (
     paginator,
-    INITIAL_MESSAGE,
     filtering_fetcher,
     default_page_builder,
-    PAGINATOR_NAME,
 )
 
 api = API(token=Token.from_env())
 bot = Telegrinder(api)
-logger.set_level("DEBUG")
-
-
-class CallbackQueryStartswith(CallbackQueryRule):
-    def __init__(self, from_: str) -> None:
-        self.from_ = from_
-
-    async def check(self, event: CallbackQuery) -> bool:
-        data = event.data.unwrap_or_none()
-        if not data:
-            return False
-
-        return data.startswith(self.from_)
+logger.set_level("INFO")
+setup_empty_callback_data_handler(paginator, bot.dispatch)
 
 
 @bot.on.message(StartCommand())
@@ -41,19 +30,18 @@ async def get_paginator(message: Message):
     kb.add(
         InlineButton(
             text="Hey! Get a paginator",
-            callback_data=INITIAL_MESSAGE.with_replaced_user_id(
-                message.from_user.id
-            ).into_callback_data(),
+            callback_data=paginator.initial_message.for_user(message.from_user.id),
+            callback_data_serializer=paginator.settings.serializer,
         )
     )
-
     await message.reply("Hi!, get a paginator!", reply_markup=kb.get_markup())
 
 
-@bot.on.callback_query(CallbackQueryStartswith(PAGINATOR_NAME))
-async def pagination(callback_query: CallbackQuery):
-    asked = INITIAL_MESSAGE.from_callback_data(callback_query.data.unwrap())
-
+@bot.on.callback_query(TelepagerMessage(paginator, alias="asked"))
+async def pagination(
+    callback_query: CallbackQuery,
+    asked: PaginationMessage,
+):
     await paginator.send_paginated(
         callback_query.ctx_api,
         chat_id=callback_query.chat_id.unwrap(),

@@ -6,13 +6,11 @@ from telepager.flag import Quality, Ordering
 from telepager import (
     Paginator,
     PaginatorSettings,
-    PaginationMessage,
     NaivePageBuilder,
     FetcherIter,
     Line,
 )
 
-PAGINATOR_NAME = "filtered-ordered"
 type MetaT = (
     int  # for our current example the `meta` will be just a number. needed for ordering
 )
@@ -65,23 +63,23 @@ class SortingPageBuilder(NaivePageBuilder[MetaT]):
     # be aware, that this method is not like other in `PageBuilder`
     # it does ordering for all data qualified to be sent to a user
 
-    # note that sorting is done in-place.
 
-    async def order_by(self, lines: list[Line[MetaT]], asked_ordering: int):
+    async def order_by(self, lines: list[Line[MetaT]], asked_ordering: int) -> list[Line[MetaT]]:
+        ordered_lines = lines.copy()
         if asked_ordering == Sorting.FROM_HIGHEST:
-            lines.sort(key=lambda i: i.meta, reverse=True)
+            ordered_lines.sort(key=lambda i: i.meta, reverse=True)
         elif asked_ordering == Sorting.FROM_LOWEST:
-            lines.sort(key=lambda i: i.meta)
+            ordered_lines.sort(key=lambda i: i.meta)
+
+        return ordered_lines
 
 
 # for details about that look at `examples/base.py`
 paginator = Paginator[MetaT](
     settings=PaginatorSettings(
-        framework="telegrinder", quality_type=Filters, ordering_type=Sorting
+        paginator_name="filtered-ordered",
+        quality_type=Filters, ordering_type=Sorting
     )
-)
-INITIAL_MESSAGE = PaginationMessage(
-    name=PAGINATOR_NAME, user_id=0, recreate_record=True
 )
 
 default_page_builder = SortingPageBuilder("Result is: ")
