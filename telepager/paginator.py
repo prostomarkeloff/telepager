@@ -1,4 +1,3 @@
-import dataclasses
 import datetime
 import typing
 
@@ -13,71 +12,21 @@ from .design import (
     add_navigation_buttons,
     add_ordering_buttons,
 )
-from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL, NEW_RECORD, ANY_USER
+from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL, NEW_RECORD, Record
+from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
 from .flag import ANY_QUALITY
 
 FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
 
 
-@dataclasses.dataclass
-class Record[T]:
-    owner_id: int  # id of a user
-    record_id: int
-    expiration_date: datetime.datetime
-
-    manager: RecordManager[T]
-    last_message_id_to_edit: int | None = None
-
-    @classmethod
-    def with_generated_record_id(
-        cls, storage: "ExpiringStorage[T]", **values: typing.Any
-    ) -> "Record[T]":
-        if records_of_user := storage.get_all_records_of_user(
-            values.get("owner_id", ANY_USER)
-        ):
-            record_id = len(records_of_user) + 1
-        else:
-            record_id = 0
-
-        return cls(record_id=record_id, **values)
-
-
-type UserId = int
-type RecordId = int
-
-
-class ExpiringStorage[T]:
-    def __init__(self) -> None:
-        self._inner: dict[UserId, dict[RecordId, Record[T]]] = {}
-
-    def put(self, record: Record[T]):
-        self._inner[record.owner_id][record.record_id] = record
-
-    def get_all_records_of_user(self, owner_id: int) -> dict[RecordId, Record[T]]:
-        return self._inner.setdefault(owner_id, {})
-
-    def get(self, owner_id: int, record_id: int) -> Record[T] | None:
-        if owner_id not in self._inner:
-            return
-
-        record = self._inner[owner_id].get(record_id)
-        if not record:
-            return
-        is_expired = datetime.datetime.now() >= record.expiration_date
-        if is_expired:
-            del self._inner[owner_id][record_id]
-            return
-
-        return record
-
-
 class Paginator[T]:
     def __init__(
         self,
         settings: PaginatorSettings[T],
+        storage: ABCExpiringStorage[T] | None = None,
     ) -> None:
-        self.storage = ExpiringStorage[T]()
+        self.storage = storage or InMemoryExpiringStorage[T]()
         self.settings = settings
 
         self.initial_message = settings.initial_message
@@ -234,6 +183,7 @@ class Paginator[T]:
         owner_id: int,
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
+        record_id: int | None = None,
     ) -> Record[T]:
         manager = RecordManager[T](
             Fetcher(
@@ -242,12 +192,22 @@ class Paginator[T]:
             ),
             self.settings,
         )
-        record = Record[T].with_generated_record_id(
-            storage=self.storage,
-            owner_id=owner_id,
-            manager=manager,
-            expiration_date=datetime.datetime.today() + duration,
-        )
+        expiration_date = datetime.datetime.today() + duration
+
+        if record_id is not None:
+            record = Record[T](
+                owner_id=owner_id,
+                manager=manager,
+                expiration_date=expiration_date,
+                record_id=record_id,
+            )
+        else:
+            record = Record[T].with_generated_record_id(
+                storage=self.storage,
+                owner_id=owner_id,
+                manager=manager,
+                expiration_date=expiration_date,
+            )
         self.storage.put(record)
         if self.settings.incremental_fetching:
             await manager.fetcher.fetch_more()
@@ -261,11 +221,13 @@ class Paginator[T]:
         message: PaginationMessage,
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
+        record_id: int | None = None,
     ) -> Record[T]:
         return await self.new_record(
             fetcher_iter=fetcher_iter,
             owner_id=message.user_id,
             duration=duration,
+            record_id=record_id,
         )
 
     async def get_or_create_record_if_needed(
@@ -274,16 +236,18 @@ class Paginator[T]:
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
     ) -> Record[T]:
+        # if we are asked to create the new record
         if message.record_id == NEW_RECORD:
             return await self.new_record_from_pagination_message(
                 message, fetcher_iter, duration=duration
             )
 
-        if not self.storage.get(message.user_id, message.record_id):
+        # if expired or doesn't exist in our current storage
+        if not self.storage.get_record(message.user_id, message.record_id):
             return await self.new_record_from_pagination_message(
-                message, fetcher_iter, duration=duration
+                message, fetcher_iter, duration=duration, record_id=message.record_id
             )
 
         return typing.cast(
-            Record[T], self.storage.get(message.user_id, message.record_id)
+            Record[T], self.storage.get_record(message.user_id, message.record_id)
         )

@@ -1,9 +1,14 @@
 import copy
 import typing
+import datetime
 from telegrinder.tools import InlineKeyboard
 from dataclasses import dataclass
 
 from .flag import ANY_ORDERING, ANY_QUALITY
+
+if typing.TYPE_CHECKING:
+    from .manager import RecordManager
+    from .storage import ABCExpiringStorage
 
 FORCE_FETCH_ALL = -1  # force fetcher to fetch all lines from iterator
 ANY_USER = 0  # that's meant to be replaced, when used for concrete user
@@ -35,6 +40,31 @@ class PaginationMessage:
             setattr(s, f_name, f_value)
 
         return s
+
+
+@dataclass
+class Record[T]:
+    owner_id: int  # id of a user
+    record_id: int
+    expiration_date: datetime.datetime
+
+    manager: "RecordManager[T]"
+    last_message_id_to_edit: int | None = None
+
+    @classmethod
+    def with_generated_record_id(
+        cls, storage: "ABCExpiringStorage[T]", **values: typing.Any
+    ) -> "Record[T]":
+        if records_of_user := storage.get_all_records_of_user(
+            values.get("owner_id", ANY_USER)
+        ):
+            record_id = typing.cast(
+                int, max(records_of_user, key=records_of_user.get) + 1   # type: ignore
+            )
+        else:
+            record_id = 0
+
+        return cls(record_id=record_id, **values)
 
 
 @dataclass

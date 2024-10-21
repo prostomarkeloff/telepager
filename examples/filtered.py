@@ -1,6 +1,7 @@
 """
 Here is the example of paginator with filtering and ordering
 """
+
 import typing
 from telepager.flag import Quality, Ordering
 from telepager import (
@@ -14,6 +15,7 @@ from telepager import (
 type MetaT = (
     int  # for our current example the `meta` will be just a number. needed for ordering
 )
+
 
 async def filtering_fetcher() -> FetcherIter[MetaT]:
     for i in range(1, 10000):
@@ -77,7 +79,9 @@ class SortingPageBuilder(NaivePageBuilder[MetaT]):
 # for details about that look at `examples/base.py`
 paginator = Paginator[MetaT](
     settings=PaginatorSettings(
-        paginator_name="filtered-ordered", quality_type=Filters, ordering_type=Sorting,
+        paginator_name="filtered-ordered",
+        quality_type=Filters,
+        ordering_type=Sorting,
     )
 )
 

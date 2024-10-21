@@ -13,7 +13,7 @@ from telegrinder.rules import StartCommand
 from telepager import PaginationMessage
 from telepager import TelepagerMessage, setup_empty_callback_data_handler
 
-from .filtered import (
+from filtered import (
     paginator,
     filtering_fetcher,
     default_page_builder,
@@ -23,8 +23,6 @@ api = API(token=Token.from_env())
 bot = Telegrinder(api)
 logger.set_level("INFO")
 setup_empty_callback_data_handler(paginator, bot.dispatch)
-
-
 
 
 @bot.on.message(StartCommand())
