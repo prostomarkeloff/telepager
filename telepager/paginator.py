@@ -13,9 +13,9 @@ from .design import (
     add_navigation_buttons,
     add_ordering_buttons,
 )
-from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL
+from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL, NEW_RECORD, ANY_USER
 from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
-from .flag import ANY_ORDERING, ANY_QUALITY
+from .flag import ANY_QUALITY
 
 FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
 
@@ -23,39 +23,53 @@ FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
 @dataclasses.dataclass
 class Record[T]:
     owner_id: int  # id of a user
+    record_id: int
     expiration_date: datetime.datetime
 
     manager: RecordManager[T]
-
-    current_page: int  # pages start from 0 cause they appear to us like a list
-    asked_quality: int  # INVARIANT: 0 means all
-    asked_ordering: int  # INVARIANT: 0 means any
-    show_all_filters: bool
-    show_all_ordering: bool
-
     last_message_id_to_edit: int | None = None
+
+    @classmethod
+    def with_generated_record_id(
+        cls, storage: "ExpiringStorage[T]", **values: typing.Any
+    ) -> "Record[T]":
+        if records_of_user := storage.get_all_records_of_user(
+            values.get("owner_id", ANY_USER)
+        ):
+            record_id = len(records_of_user) + 1
+        else:
+            record_id = 0
+
+        return cls(record_id=record_id, **values)
+
+
+type UserId = int
+type RecordId = int
 
 
 class ExpiringStorage[T]:
     def __init__(self) -> None:
-        self._inner: dict[int, Record[T]] = {}
+        self._inner: dict[UserId, dict[RecordId, Record[T]]] = {}
 
     def put(self, record: Record[T]):
-        self._inner[record.owner_id] = record
+        self._inner[record.owner_id][record.record_id] = record
 
-    def get(self, owner_id: int) -> Record[T] | None:
+    def get_all_records_of_user(self, owner_id: int) -> dict[RecordId, Record[T]]:
+        return self._inner.setdefault(owner_id, {})
+
+    def get(self, owner_id: int, record_id: int) -> Record[T] | None:
         if owner_id not in self._inner:
             return
 
-        record = self._inner[owner_id]
+        record = self._inner[owner_id].get(record_id)
+        if not record:
+            return
         is_expired = datetime.datetime.now() >= record.expiration_date
         if is_expired:
+            del self._inner[owner_id][record_id]
             return
 
         return record
-
-    def __contains__(self, owner_id: int) -> bool:
-        return bool(self.get(owner_id))
 
 
 class Paginator[T]:
@@ -137,9 +151,14 @@ class Paginator[T]:
         ttl: datetime.timedelta = FOREVER,
     ) -> bool:
         keyboard = InlineKeyboard()
-        await self.new_record_if_needed(asked, fetcher_iter, ttl)
 
-        record = typing.cast(Record[T], self.storage.get(asked.user_id))
+        # here we do the IMPORTANT thing, that lets us to have different working keyboards at a time
+        # we change the pagination message for design.py, letting it work with CORRECT record_id
+        # cause there is a variant, when asked.record_id is NEW_RECORD, so we have to change it to
+        # an actual record id
+        # we do the copy, cause we don't want to touch the initial message.
+        record = await self.get_or_create_record_if_needed(asked, fetcher_iter, ttl)
+        asked = asked.copy_with_changed_fields(record_id=record.record_id)
 
         if self.settings.quality_type:
             add_filters_buttons(
@@ -215,58 +234,56 @@ class Paginator[T]:
         owner_id: int,
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
-        current_page: int = 0,
-        show_all_filters: bool = False,
-        show_all_ordering: bool = False,
-        quality: int = ANY_QUALITY,
-        ordering: int = ANY_ORDERING,
-    ):
+    ) -> Record[T]:
         manager = RecordManager[T](
-            Fetcher(incremental_fetching_step=self.settings.incremental_fetching_step, iter=fetcher_iter),
-            self.settings
-        )
-        self.storage.put(
-            Record(
-                owner_id=owner_id,
-                manager=manager,
-                expiration_date=datetime.datetime.today() + duration,
-                current_page=current_page,
-                show_all_filters=show_all_filters,
-                show_all_ordering=show_all_ordering,
-                asked_quality=quality,
-                asked_ordering=ordering,
+            Fetcher(
+                incremental_fetching_step=self.settings.incremental_fetching_step,
+                iter=fetcher_iter,
             ),
+            self.settings,
         )
+        record = Record[T].with_generated_record_id(
+            storage=self.storage,
+            owner_id=owner_id,
+            manager=manager,
+            expiration_date=datetime.datetime.today() + duration,
+        )
+        self.storage.put(record)
         if self.settings.incremental_fetching:
             await manager.fetcher.fetch_more()
         else:
             await manager.fetcher.fetch_all()
+
+        return record
 
     async def new_record_from_pagination_message(
         self,
         message: PaginationMessage,
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
-    ):
-        await self.new_record(
+    ) -> Record[T]:
+        return await self.new_record(
             fetcher_iter=fetcher_iter,
             owner_id=message.user_id,
-            current_page=message.page,
             duration=duration,
         )
 
-    async def new_record_if_needed(
+    async def get_or_create_record_if_needed(
         self,
         message: PaginationMessage,
         fetcher_iter: FetcherIter[T],
         duration: datetime.timedelta = FOREVER,
-    ):
-        if message.recreate_record:
-            await self.new_record_from_pagination_message(
+    ) -> Record[T]:
+        if message.record_id == NEW_RECORD:
+            return await self.new_record_from_pagination_message(
                 message, fetcher_iter, duration=duration
             )
 
-        if message.user_id not in self.storage:
-            await self.new_record_from_pagination_message(
+        if not self.storage.get(message.user_id, message.record_id):
+            return await self.new_record_from_pagination_message(
                 message, fetcher_iter, duration=duration
             )
+
+        return typing.cast(
+            Record[T], self.storage.get(message.user_id, message.record_id)
+        )

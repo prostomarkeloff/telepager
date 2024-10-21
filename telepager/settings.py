@@ -34,7 +34,9 @@ class PaginatorSettings[T]:
 
     def __post_init__(self, page_size: int):
         self.initial_message = PaginationMessage(
-            name=self.paginator_name, recreate_record=True
+            name=self.paginator_name,
         )
         if not self.page_sizer_factory:
-            self.page_sizer_factory = lambda: functools.partial(counting_page_sizer, page_size=page_size)
+            self.page_sizer_factory = lambda: functools.partial(
+                counting_page_sizer, page_size=page_size
+            )

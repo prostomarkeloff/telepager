@@ -23,9 +23,10 @@ def add_ordering_buttons[T](
     settings: PaginatorSettings[T],
 ):
     if pagination_message.show_all_ordering is False:
-        message = pagination_message.with_replaced_fields_without_recreating_record(
+        message = pagination_message.copy_with_changed_fields(
             show_all_ordering=True,
         )
+        message.show_all_ordering = True
 
         current_keyboard.add(
             InlineButton(
@@ -35,7 +36,7 @@ def add_ordering_buttons[T](
             )
         ).row()
     elif pagination_message.show_all_ordering is True:
-        message = pagination_message.with_replaced_fields_without_recreating_record(
+        message = pagination_message.copy_with_changed_fields(
             show_all_ordering=False,
         )
 
@@ -55,10 +56,8 @@ def add_ordering_buttons[T](
             else:
                 shown_name = ordering.shown_name(language_code)
                 callback_data = copy.copy(pagination_message)
-                callback_data = (
-                    pagination_message.with_replaced_fields_without_recreating_record(
-                        ordering=ordering.value,
-                    )
+                callback_data = pagination_message.copy_with_changed_fields(
+                    ordering=ordering.value,
                 )
                 serializer = settings.serializer
             current_keyboard.add(
@@ -79,7 +78,7 @@ def add_filters_buttons[T](
     settings: PaginatorSettings[T],
 ):
     if pagination_message.show_all_filters is False:
-        message = pagination_message.with_replaced_fields_without_recreating_record(
+        message = pagination_message.copy_with_changed_fields(
             show_all_filters=True,
         )
 
@@ -91,7 +90,7 @@ def add_filters_buttons[T](
             )
         ).row()
     elif pagination_message.show_all_filters is True:
-        message = pagination_message.with_replaced_fields_without_recreating_record(
+        message = pagination_message.copy_with_changed_fields(
             show_all_filters=False,
         )
 
@@ -113,11 +112,9 @@ def add_filters_buttons[T](
             all_qualities_text = (
                 f"{settings.i18n[PossibleTexts.ALL_QUALITIES][language_code]}"
             )
-            all_qualities_callback_data = (
-                pagination_message.with_replaced_fields_without_recreating_record(
-                    page=0,
-                    quality=ANY_QUALITY,
-                )
+            all_qualities_callback_data = pagination_message.copy_with_changed_fields(
+                page=0,
+                quality=ANY_QUALITY,
             )
             serializer = settings.serializer
         current_keyboard.add(
@@ -137,11 +134,9 @@ def add_filters_buttons[T](
             else:
                 page = 0
                 shown_name = quality.shown_name(language_code)
-                callback_data = (
-                    pagination_message.with_replaced_fields_without_recreating_record(
-                        page=page,
-                        quality=quality.value,
-                    )
+                callback_data = pagination_message.copy_with_changed_fields(
+                    page=page,
+                    quality=quality.value,
                 )
                 serializer = settings.serializer
             current_keyboard.add(
@@ -164,7 +159,7 @@ def add_navigation_buttons[T](
         keyboard.add(
             InlineButton(
                 text="<<",
-                callback_data=asked.with_replaced_fields_without_recreating_record(
+                callback_data=asked.copy_with_changed_fields(
                     page=0,
                 ),
                 callback_data_serializer=settings.serializer,
@@ -173,7 +168,7 @@ def add_navigation_buttons[T](
         keyboard.add(
             InlineButton(
                 text="<",
-                callback_data=asked.with_replaced_fields_without_recreating_record(
+                callback_data=asked.copy_with_changed_fields(
                     page=asked.page - 1,
                 ),
                 callback_data_serializer=settings.serializer,
@@ -194,7 +189,7 @@ def add_navigation_buttons[T](
         keyboard.add(
             InlineButton(
                 text=">",
-                callback_data=asked.with_replaced_fields_without_recreating_record(
+                callback_data=asked.copy_with_changed_fields(
                     page=asked.page + 1,
                 ),
                 callback_data_serializer=settings.serializer,
@@ -203,7 +198,7 @@ def add_navigation_buttons[T](
         keyboard.add(
             InlineButton(
                 text=">>",
-                callback_data=asked.with_replaced_fields_without_recreating_record(
+                callback_data=asked.copy_with_changed_fields(
                     page=FORCE_FETCH_ALL,
                 ),
                 callback_data_serializer=settings.serializer,
