@@ -59,7 +59,8 @@ class Record[T]:
             values.get("owner_id", ANY_USER)
         ):
             record_id = typing.cast(
-                int, max(records_of_user, key=records_of_user.get) + 1   # type: ignore
+                int,
+                max(records_of_user, key=records_of_user.get) + 1,  # type: ignore
             )
         else:
             record_id = 0

@@ -32,5 +32,5 @@ __all__ = (
     "TelepagerMessage",
     "setup_empty_callback_data_handler",
     "ABCExpiringStorage",
-    "InMemoryExpiringStorage"
+    "InMemoryExpiringStorage",
 )

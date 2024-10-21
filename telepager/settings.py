@@ -1,16 +1,21 @@
 import dataclasses
 import functools
+import datetime
+import typing
 from telegrinder.tools import (
     ABCDataSerializer,
     MsgPackSerializer,
 )
 
-from telepager.structs import PaginationMessage
-
-from .i18n import DEFAULT_I18N, PaginatorInternalI18N
+from .i18n import DEFAULT_I18N, PaginatorInternalI18N, I18N_Text
 from .flag import FLAG_T
-from .structs import PageSizerFactory
+from .structs import PageSizerFactory, PaginationMessage, FetcherIter, DefaultFactory
 from .page_sizer import counting_page_sizer
+
+if typing.TYPE_CHECKING:
+    from .manager import ABCPageBuilder
+
+FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
 
 
 @dataclasses.dataclass
@@ -31,6 +36,12 @@ class PaginatorSettings[T]:
     incremental_fetching: bool = False
     quality_type: FLAG_T | None = None
     ordering_type: FLAG_T | None = None
+
+    default_page_builder: "ABCPageBuilder[T] | None" = None
+    default_fetcher_factory: DefaultFactory[FetcherIter[T]] | None = None
+    default_language_code: str = "en"
+    default_empty_page_book_text: I18N_Text | None = None
+    default_ttl: datetime.timedelta = FOREVER
 
     def __post_init__(self, page_size: int):
         self.initial_message = PaginationMessage(

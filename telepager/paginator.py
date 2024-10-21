@@ -2,6 +2,7 @@ import datetime
 import typing
 
 from telegrinder import API, HTMLFormatter
+from telegrinder import CallbackQueryCute, MessageCute, InlineQueryCute
 from telegrinder.tools.keyboard import InlineKeyboard
 
 from telepager.i18n import I18N_Text, internationalize
@@ -17,7 +18,19 @@ from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
 from .flag import ANY_QUALITY
 
-FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
+
+def _not_loaded_defaults_exception(name: str) -> typing.NoReturn:
+    raise RuntimeError(
+        f"You've tried to use the default {name}, but it isn't set\nSet the default or pass to 'send_paginated' the needed value."
+    )
+
+def _get_ctx_api_and_chat_id_from_event(event: MessageCute | CallbackQueryCute | InlineQueryCute) -> tuple[API, int]:
+    if isinstance(event, MessageCute):
+        return event.api, event.chat_id
+    elif isinstance(event, CallbackQueryCute):
+        return event.api, event.chat_id.unwrap()
+    else:
+        return event.api, event.from_user.id
 
 
 class Paginator[T]:
@@ -87,19 +100,40 @@ class Paginator[T]:
 
         return page_book
 
+
     async def send_paginated(
         self,
-        ctx_api: API,
-        chat_id: int,
+        event: MessageCute | CallbackQueryCute | InlineQueryCute,
         asked: PaginationMessage,
-        fetcher_iter: FetcherIter[T],
-        builder: ABCPageBuilder[T],
+        fetcher_iter: FetcherIter[T] | None = None,
+        builder: ABCPageBuilder[T] | None = None,
         empty_page_book_text: I18N_Text | None = None,
-        language_code: str = "ru",
+        language_code: str | None = None,
         extend_keyboard: InlineKeyboard | None = None,
-        ttl: datetime.timedelta = FOREVER,
+        ttl: datetime.timedelta | None = None,
     ) -> bool:
         keyboard = InlineKeyboard()
+
+        ctx_api, chat_id = _get_ctx_api_and_chat_id_from_event(event)
+
+        if not fetcher_iter:
+            fetcher_iter = (
+                self.settings.default_fetcher_factory()
+                if self.settings.default_fetcher_factory
+                else _not_loaded_defaults_exception("fetcher_iter")
+            )
+        if not builder:
+            builder = (
+                self.settings.default_page_builder
+                if self.settings.default_page_builder
+                else _not_loaded_defaults_exception("builder")
+            )
+        if not empty_page_book_text:
+            empty_page_book_text = self.settings.default_empty_page_book_text
+        if not language_code:
+            language_code = self.settings.default_language_code
+        if not ttl:
+            ttl = self.settings.default_ttl
 
         # here we do the IMPORTANT thing, that lets us to have different working keyboards at a time
         # we change the pagination message for design.py, letting it work with CORRECT record_id
@@ -182,7 +216,7 @@ class Paginator[T]:
         self,
         owner_id: int,
         fetcher_iter: FetcherIter[T],
-        duration: datetime.timedelta = FOREVER,
+        duration: datetime.timedelta,
         record_id: int | None = None,
     ) -> Record[T]:
         manager = RecordManager[T](
@@ -220,7 +254,7 @@ class Paginator[T]:
         self,
         message: PaginationMessage,
         fetcher_iter: FetcherIter[T],
-        duration: datetime.timedelta = FOREVER,
+        duration: datetime.timedelta,
         record_id: int | None = None,
     ) -> Record[T]:
         return await self.new_record(
@@ -234,7 +268,7 @@ class Paginator[T]:
         self,
         message: PaginationMessage,
         fetcher_iter: FetcherIter[T],
-        duration: datetime.timedelta = FOREVER,
+        duration: datetime.timedelta,
     ) -> Record[T]:
         # if we are asked to create the new record
         if message.record_id == NEW_RECORD:

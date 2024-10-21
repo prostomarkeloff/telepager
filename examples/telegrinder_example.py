@@ -15,8 +15,6 @@ from telepager import TelepagerMessage, setup_empty_callback_data_handler
 
 from filtered import (
     paginator,
-    filtering_fetcher,
-    default_page_builder,
 )
 
 api = API(token=Token.from_env())
@@ -44,11 +42,8 @@ async def pagination(
     asked: PaginationMessage,
 ):
     await paginator.send_paginated(
-        callback_query.ctx_api,
-        chat_id=callback_query.chat_id.unwrap(),
-        asked=asked,
-        fetcher_iter=filtering_fetcher(),
-        builder=default_page_builder,
+        callback_query,
+        asked
     )
 
     await callback_query.answer()

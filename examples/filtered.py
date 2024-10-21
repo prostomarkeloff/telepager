@@ -82,7 +82,7 @@ paginator = Paginator[MetaT](
         paginator_name="filtered-ordered",
         quality_type=Filters,
         ordering_type=Sorting,
+        default_page_builder=SortingPageBuilder("Result is: "),
+        default_fetcher_factory=lambda: filtering_fetcher(),
     )
 )
-
-default_page_builder = SortingPageBuilder("Result is: ")
