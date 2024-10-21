@@ -17,6 +17,7 @@ class PossibleTexts(enum.Enum):
     QUALITIES = enum.auto()
     ALL_QUALITIES = enum.auto()
 
+
 DEFAULT_I18N = {
     PossibleTexts.ORDERING: {"ru": "Сортировка", "en": "Ordering"},
     PossibleTexts.QUALITIES: {"ru": "Фильтры", "en": "Filters"},

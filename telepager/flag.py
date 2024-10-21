@@ -9,9 +9,8 @@ ANY_ORDERING: int = ANY_QUALITY
 class ABCFlagMeta(abc.ABCMeta, enum.EnumMeta):
     def __new__(mcls, *args, **kw):  # type: ignore
         abstract_enum_cls = super().__new__(mcls, *args, **kw)  # type: ignore
-        # Only check abstractions if members were defined.
         if abstract_enum_cls._member_map_:
-            try:  # Handle existence of undefined abstract methods.
+            try:
                 absmethods = list(abstract_enum_cls.__abstractmethods__)
                 if absmethods:
                     missing = ", ".join(f"{method!r}" for method in absmethods)

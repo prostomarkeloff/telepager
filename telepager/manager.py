@@ -1,18 +1,18 @@
 import abc
 import asyncio
-import typing
+from types import NotImplementedType
 
+from .settings import PaginatorSettings
 from .flag import ANY_ORDERING, ANY_QUALITY, FLAG_T
 from .structs import FetcherIter, Line, Page, PageBook
 
-INCREMENTAL_FETCHING_PAGE_COUNT = 100
-
 
 class Fetcher[T]:
-    def __init__(self, page_size: int, iter: FetcherIter[T]) -> None:
+    def __init__(self, incremental_fetching_step: int, iter: FetcherIter[T]) -> None:
         self.lines: list[Line[T]] = []
 
-        self.page_size = page_size
+        self.incremental_fetching_step = incremental_fetching_step
+        self._average_page_size: int = 0
         self._iter = iter
         self._iter_is_alive = True
         self._iter_lock = asyncio.Lock()
@@ -22,7 +22,7 @@ class Fetcher[T]:
             return
 
         async with self._iter_lock:
-            for _ in range(1, INCREMENTAL_FETCHING_PAGE_COUNT * self.page_size):
+            for _ in range(1, self.incremental_fetching_step):
                 try:
                     elem = await self._iter.__anext__()
                 except (StopAsyncIteration, RuntimeError):
@@ -35,9 +35,13 @@ class Fetcher[T]:
         while self._iter_is_alive:
             await self.fetch_more()
 
-    def fetched_pages(self) -> int:
-        return len(self.lines) // self.page_size + (
-            1 if len(self.lines) % self.page_size != 0 else 0
+    @property
+    def fetched_pages(self) -> int | None:
+        if not self._average_page_size:
+            return
+
+        return len(self.lines) // self._average_page_size + (
+            1 if len(self.lines) % self._average_page_size != 0 else 0
         )
 
     def all_fetched(self) -> bool:
@@ -64,23 +68,6 @@ def filter_lines_by_quality[T](
         return result
 
 
-def get_lines_for_page_building[T](
-    lines: list[Line[T]], page_size: int
-) -> typing.Iterator[list[Line[T]]]:
-    buffer: list[Line[T]] = []
-    for line in lines:
-        if len(buffer) == page_size:
-            cpy = buffer.copy()
-            yield cpy
-            buffer.clear()
-            continue
-
-        buffer.append(line)
-
-    if buffer:
-        yield buffer
-
-
 class ABCPageBuilder[T](abc.ABC):
     @abc.abstractmethod
     async def build_page(self, lines: list[Line[T]]) -> Page | None: ...
@@ -92,10 +79,9 @@ class ABCPageBuilder[T](abc.ABC):
     Used by paginator when PageBook for _some_ quality is empty.
     """
 
-    async def order_by(self, lines: list[Line[T]], asked_ordering: int) -> None:
-        """
-        the child should implement sorting in-place on `lines`
-        """
+    async def order_by(
+        self, lines: list[Line[T]], asked_ordering: int
+    ) -> NotImplementedType | list[Line[T]]:
         return NotImplemented
 
 
@@ -132,8 +118,9 @@ class FormattingPageBuilder[T](ABCPageBuilder[T]):
 
 
 class RecordManager[T]:
-    def __init__(self, fetcher: Fetcher[T]):
+    def __init__(self, fetcher: Fetcher[T], settings: PaginatorSettings[T]):
         self.fetcher = fetcher
+        self.settings = settings
 
     async def get_empty_page(self, builder: ABCPageBuilder[T]) -> Page:
         return await builder.empty_page()
@@ -149,14 +136,17 @@ class RecordManager[T]:
             self.fetcher.lines, asked_quality, quality_t
         )
         if asked_ordering != ANY_ORDERING:
-            await builder.order_by(filtered_lines, asked_ordering)
+            ordered_lines = await builder.order_by(filtered_lines, asked_ordering)
+            if ordered_lines is not NotImplemented:
+                filtered_lines = ordered_lines
 
         page_book = [
             await builder.build_page(selected_lines)
-            for selected_lines in get_lines_for_page_building(
-                filtered_lines, self.fetcher.page_size
+            for selected_lines in self.settings.page_sizer_factory()(  # type: ignore
+                filtered_lines
             )
         ]
         page_book = [page for page in page_book if page]
+        self.fetcher._average_page_size = len(filtered_lines) // len(page_book)  # type: ignore
 
         return page_book

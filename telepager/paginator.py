@@ -2,37 +2,22 @@ import dataclasses
 import datetime
 import typing
 
-from ._compat import (
-    API_T,
-    KeyboardT,
-    MarkupT,
-    get_keyboard_t,
-    get_markup,
-    send_message,
-    edit_message,
-    merge_keyboards,
-)
-from .i18n import DEFAULT_I18N, DEFAULT_LANG_CODE, I18N_Text, internationalize, PaginatorInternalI18N
-from .structs import FORCE_FETCH_ALL, PageBook, PaginationMessage
+from telegrinder import API, HTMLFormatter
+from telegrinder.tools.keyboard import InlineKeyboard
 
-from .design import add_filters_buttons, add_navigation_buttons, add_ordering_buttons
+from telepager.i18n import I18N_Text, internationalize
+
+from .settings import PaginatorSettings
+from .design import (
+    add_filters_buttons,
+    add_navigation_buttons,
+    add_ordering_buttons,
+)
+from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL
 from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
-from .flag import ANY_ORDERING, ANY_QUALITY, FLAG_T
+from .flag import ANY_ORDERING, ANY_QUALITY
 
 FOREVER = datetime.timedelta(days=10000)  # sure bot gets reload
-
-
-@dataclasses.dataclass
-class PaginatorSettings:
-    i18n: PaginatorInternalI18N = dataclasses.field(default_factory=lambda: DEFAULT_I18N)
-
-    page_size: int = 10
-    incremental_fetching: bool = False
-    quality_type: FLAG_T | None = None
-    ordering_type: FLAG_T | None = None
-
-    framework: typing.Literal["telegrinder", "aiogram"] = "telegrinder"
-    noop_callback_data: str = "empty"
 
 
 @dataclasses.dataclass
@@ -76,51 +61,46 @@ class ExpiringStorage[T]:
 class Paginator[T]:
     def __init__(
         self,
-        *,
-        settings: PaginatorSettings | None = None,
+        settings: PaginatorSettings[T],
     ) -> None:
         self.storage = ExpiringStorage[T]()
-
-        if not settings:
-            settings = PaginatorSettings()
-
         self.settings = settings
 
-    def _get_markup(self, keyboard: KeyboardT | None = None) -> MarkupT | None:
-        return get_markup(self.settings.framework, keyboard) if keyboard else None
+        self.initial_message = settings.initial_message
 
     async def _send_message(
         self,
         record: Record[T],
         chat_id: int,
-        ctx_api: API_T,
+        ctx_api: API,
         text: str,
-        keyboard: KeyboardT | None = None,
-        **send_message_kwargs: typing.Any,
+        keyboard: InlineKeyboard | None = None,
     ):
         if not record.last_message_id_to_edit:
-            result = await send_message(
-                self.settings.framework,
-                ctx_api,
+            result = await ctx_api.send_message(
                 chat_id=chat_id,
                 text=text,
-                reply_markup=self._get_markup(keyboard),
-                **send_message_kwargs,
+                reply_markup=keyboard.get_markup() if keyboard else None,
+                parse_mode=HTMLFormatter.PARSE_MODE,
+                disable_web_page_preview=True,
             )
-            record.last_message_id_to_edit = result.message_id
+            record.last_message_id_to_edit = result.unwrap().message_id
         else:
-            await edit_message(
-                self.settings.framework,
-                ctx_api,
+            await ctx_api.edit_message_text(
                 text=text,
                 chat_id=chat_id,
                 message_id=record.last_message_id_to_edit,
-                reply_markup=self._get_markup(keyboard),
-                **send_message_kwargs,
+                reply_markup=keyboard.get_markup() if keyboard else None,
+                parse_mode=HTMLFormatter.PARSE_MODE,
+                disable_web_page_preview=True,
             )
 
     async def _get_page_book(
-        self, *, asked: PaginationMessage, record: Record[T], builder: ABCPageBuilder[T]
+        self,
+        *,
+        asked: PaginationMessage,
+        record: Record[T],
+        builder: ABCPageBuilder[T],
     ) -> PageBook:
         # if user clicked ">>" button we have to fetch all existing data
         if asked.page == FORCE_FETCH_ALL:
@@ -129,7 +109,8 @@ class Paginator[T]:
         # fetch more pages if user tried like the half of already fetched
         if (
             not record.manager.fetcher.all_fetched()
-            and asked.page == record.manager.fetcher.fetched_pages() // 2
+            and record.manager.fetcher.fetched_pages
+            and asked.page == record.manager.fetcher.fetched_pages // 2
         ):
             await record.manager.fetcher.fetch_more()
 
@@ -145,18 +126,17 @@ class Paginator[T]:
 
     async def send_paginated(
         self,
-        ctx_api: API_T,
+        ctx_api: API,
         chat_id: int,
         asked: PaginationMessage,
         fetcher_iter: FetcherIter[T],
         builder: ABCPageBuilder[T],
         empty_page_book_text: I18N_Text | None = None,
-        language_code: str = DEFAULT_LANG_CODE,
-        extend_keyboard: KeyboardT | None = None,
+        language_code: str = "ru",
+        extend_keyboard: InlineKeyboard | None = None,
         ttl: datetime.timedelta = FOREVER,
-        **send_message_kwargs: typing.Any,
     ) -> bool:
-        keyboard = get_keyboard_t(self.settings.framework)()
+        keyboard = InlineKeyboard()
         await self.new_record_if_needed(asked, fetcher_iter, ttl)
 
         record = typing.cast(Record[T], self.storage.get(asked.user_id))
@@ -189,11 +169,11 @@ class Paginator[T]:
         if not page_book:
             # if there is no pages AT ALL
             if empty_page_book_text and asked.quality == ANY_QUALITY:
-                await send_message(
-                    self.settings.framework,
-                    ctx_api,
+                await ctx_api.send_message(
                     chat_id=chat_id,
                     text=internationalize(empty_page_book_text, language_code),
+                    parse_mode=HTMLFormatter.PARSE_MODE,
+                    disable_web_page_preview=True,
                 )
             # if there is no pages for asked quality
             else:
@@ -211,14 +191,14 @@ class Paginator[T]:
 
         try:
             asked_page = page_book[asked.page]
-        except IndexError:  # заебал агрессивно тыкать юзер РЕАЛЬНО
+        except IndexError:
             return False
 
         if asked_page.keyboard:
-            merge_keyboards(self.settings.framework, keyboard, asked_page.keyboard)
+            keyboard.merge(asked_page.keyboard)
 
         if extend_keyboard:
-            merge_keyboards(self.settings.framework, keyboard, extend_keyboard)
+            keyboard.merge(extend_keyboard)
 
         await self._send_message(
             chat_id=chat_id,
@@ -242,7 +222,8 @@ class Paginator[T]:
         ordering: int = ANY_ORDERING,
     ):
         manager = RecordManager[T](
-            Fetcher(page_size=self.settings.page_size, iter=fetcher_iter)
+            Fetcher(incremental_fetching_step=self.settings.incremental_fetching_step, iter=fetcher_iter),
+            self.settings
         )
         self.storage.put(
             Record(

@@ -1,3 +1,4 @@
+import typing
 from telegrinder import (
     API,
     Message,
@@ -22,6 +23,8 @@ api = API(token=Token.from_env())
 bot = Telegrinder(api)
 logger.set_level("INFO")
 setup_empty_callback_data_handler(paginator, bot.dispatch)
+
+
 
 
 @bot.on.message(StartCommand())
