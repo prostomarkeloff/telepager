@@ -2,8 +2,8 @@ import abc
 import asyncio
 from types import NotImplementedType
 
-from .settings import PaginatorSettings
 from .flag import ANY_ORDERING, ANY_QUALITY, FLAG_T
+from .settings import PaginatorSettings
 from .structs import FetcherIter, Line, Page, PageBook
 
 

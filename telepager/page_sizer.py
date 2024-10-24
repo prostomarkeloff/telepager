@@ -1,4 +1,5 @@
 import typing
+
 from .structs import Line
 
 

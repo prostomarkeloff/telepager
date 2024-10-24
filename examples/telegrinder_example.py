@@ -1,25 +1,28 @@
-import typing
 from telegrinder import (
     API,
-    Message,
     CallbackQuery,
+    InlineButton,
+    InlineKeyboard,
+    Message,
     Telegrinder,
     Token,
-    InlineKeyboard,
-    InlineButton,
 )
 from telegrinder.modules import logger
 from telegrinder.rules import StartCommand
-from telepager import PaginationMessage
-from telepager import TelepagerMessage, setup_empty_callback_data_handler
 
-from filtered import (
-    paginator,
+from telepager import (
+    PaginationMessage,
+    TelepagerMessage,
+    setup_empty_callback_data_handler,
 )
+
+from .filtered import paginator
 
 api = API(token=Token.from_env())
 bot = Telegrinder(api)
 logger.set_level("INFO")
+
+# some buttons are not touchable. let telepager handle them with simple `callback_query.answer()`
 setup_empty_callback_data_handler(paginator, bot.dispatch)
 
 
@@ -41,10 +44,7 @@ async def pagination(
     callback_query: CallbackQuery,
     asked: PaginationMessage,
 ):
-    await paginator.send_paginated(
-        callback_query,
-        asked
-    )
+    await paginator.send_paginated(callback_query, asked)
 
     await callback_query.answer()
 

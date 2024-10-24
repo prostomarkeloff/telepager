@@ -1,5 +1,6 @@
-import datetime
 import abc
+import datetime
+
 from .structs import Record
 
 type UserId = int

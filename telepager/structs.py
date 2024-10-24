@@ -1,8 +1,9 @@
 import copy
-import typing
 import datetime
-from telegrinder.tools import InlineKeyboard
+import typing
 from dataclasses import dataclass
+
+from telegrinder.tools import InlineKeyboard
 
 from .flag import ANY_ORDERING, ANY_QUALITY
 

@@ -1,36 +1,37 @@
-"""
-Here we put our funcs and vals needed only for paginating reasons
-"""
-
 from telepager import (
-    Paginator,
-    PaginationMessage,
-    PaginatorSettings,
-    Line,
-    FetcherIter,
-    NaivePageBuilder,
     ANY_QUALITY,
+    FetcherIter,
+    Line,
+    NaivePageBuilder,
+    Paginator,
+    PaginatorSettings,
 )
 
 
 # This function generates 10.000 lines, simply containing theirs number and having no quality (no filter)
 # also they have no `meta`. Meta variable is some additional information, that can be used by PageBuilder
-# for generation a keyboard for a page or anything else
+# for generation of a keyboard for a page or anything else
 async def fetcher() -> FetcherIter[None]:
     for i in range(1, 10000):
         yield Line(text=str(i), quality=ANY_QUALITY, meta=None)
 
 
-# here we create our paginatior object. in place of `framework` we should put the name of our telegram's bot library
-# by default it considers it to be `telegrinder`, but in favor of our aiogram example here it would be `aiogram`
-# also, telepager offers us an ability to fetch data incrementally (maybe, your fetcher goes to net to get data; it can be slow sometimes)
-# but by default it's disabled; for sake of showing you that telepager is able to do it - I'll enable it.
-paginator = Paginator[None](
-    settings=PaginatorSettings(
-        paginator_name="our-paginator", incremental_fetching=True
-    )
-)
-
 # here is presented the default page builder, the thing putting your `Line`s to your Page
 # the naive one just gets your text and puts your lines after `\n`
 default_builder = NaivePageBuilder[None]("The result is: ")
+
+# here we create our paginator object.
+# we have to specify its settings, to make it usable.
+# in favor of this example, I have enabled 'incremental_fetcing', the telepager internal's mechanism
+# letting it to fetch not all like 10.000 lines, but thousand by thounsand, when the half of it is already seen by user
+# you can change the step and fetch not the 1.000, but 2.000 and so on, the paginator is very programmable
+# also you can specify default ttl, page builder, even the page sizer (a thing, letting page have its size: a number of lines on it)
+# the page sizer is a sophisticated mechanism, that shouldn't be touched without a solid need.
+# enjoy looking at PaginatorSettings definition, to get its full list of settings.
+paginator = Paginator[None](
+    settings=PaginatorSettings(
+        paginator_name="our-paginator",
+        incremental_fetching=True,
+        default_page_builder=default_builder,
+    )
+)

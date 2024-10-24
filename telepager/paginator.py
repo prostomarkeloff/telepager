@@ -1,22 +1,23 @@
 import datetime
 import typing
 
-from telegrinder import API, HTMLFormatter
-from telegrinder import CallbackQueryCute, MessageCute, InlineQueryCute
+from telegrinder import (
+    API,
+    CallbackQueryCute,
+    HTMLFormatter,
+    InlineQueryCute,
+    MessageCute,
+)
 from telegrinder.tools.keyboard import InlineKeyboard
 
 from telepager.i18n import I18N_Text, internationalize
 
-from .settings import PaginatorSettings
-from .design import (
-    add_filters_buttons,
-    add_navigation_buttons,
-    add_ordering_buttons,
-)
-from .structs import PageBook, PaginationMessage, FORCE_FETCH_ALL, NEW_RECORD, Record
-from .storage import ABCExpiringStorage, InMemoryExpiringStorage
-from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
+from .design import add_filters_buttons, add_navigation_buttons, add_ordering_buttons
 from .flag import ANY_QUALITY
+from .manager import ABCPageBuilder, Fetcher, FetcherIter, RecordManager
+from .settings import PaginatorSettings
+from .storage import ABCExpiringStorage, InMemoryExpiringStorage
+from .structs import FORCE_FETCH_ALL, NEW_RECORD, PageBook, PaginationMessage, Record
 
 
 def _not_loaded_defaults_exception(name: str) -> typing.NoReturn:
@@ -24,7 +25,10 @@ def _not_loaded_defaults_exception(name: str) -> typing.NoReturn:
         f"You've tried to use the default {name}, but it isn't set\nSet the default or pass to 'send_paginated' the needed value."
     )
 
-def _get_ctx_api_and_chat_id_from_event(event: MessageCute | CallbackQueryCute | InlineQueryCute) -> tuple[API, int]:
+
+def _get_ctx_api_and_chat_id_from_event(
+    event: MessageCute | CallbackQueryCute | InlineQueryCute,
+) -> tuple[API, int]:
     if isinstance(event, MessageCute):
         return event.api, event.chat_id
     elif isinstance(event, CallbackQueryCute):
@@ -99,7 +103,6 @@ class Paginator[T]:
             asked.page = len(page_book) - 1
 
         return page_book
-
 
     async def send_paginated(
         self,

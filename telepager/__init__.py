@@ -1,19 +1,18 @@
+from .custom import TelepagerMessage, setup_empty_callback_data_handler
+from .manager import ABCPageBuilder, FormattingPageBuilder, NaivePageBuilder
 from .paginator import Paginator
 from .settings import PaginatorSettings
+from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 from .structs import (
-    PaginationMessage,
+    ANY_ORDERING,
+    ANY_QUALITY,
+    FORCE_FETCH_ALL,
     FetcherIter,
     Line,
     Page,
     PageBook,
-    ANY_QUALITY,
-    ANY_ORDERING,
-    FORCE_FETCH_ALL,
+    PaginationMessage,
 )
-from .manager import NaivePageBuilder, ABCPageBuilder, FormattingPageBuilder
-
-from .custom import TelepagerMessage, setup_empty_callback_data_handler
-from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 
 __all__ = (
     "Paginator",

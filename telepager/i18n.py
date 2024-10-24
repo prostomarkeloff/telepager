@@ -1,5 +1,5 @@
-import typing
 import enum
+import typing
 
 type LANG_CODE = str
 type I18N_Text = str | typing.Callable[[LANG_CODE], str]

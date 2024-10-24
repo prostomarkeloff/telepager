@@ -1,7 +1,8 @@
-from fntypes import Ok, Error
-from telepager import Paginator
-from telegrinder.rules import CallbackQueryDataRule, CallbackDataEq
+from fntypes import Error, Ok
 from telegrinder import CallbackQuery, Context, Dispatch
+from telegrinder.rules import CallbackDataEq, CallbackQueryDataRule
+
+from telepager import Paginator
 
 
 class TelepagerMessage[T](CallbackQueryDataRule):

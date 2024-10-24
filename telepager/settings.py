@@ -1,16 +1,14 @@
 import dataclasses
-import functools
 import datetime
+import functools
 import typing
-from telegrinder.tools import (
-    ABCDataSerializer,
-    MsgPackSerializer,
-)
 
-from .i18n import DEFAULT_I18N, PaginatorInternalI18N, I18N_Text
+from telegrinder.tools import ABCDataSerializer, MsgPackSerializer
+
 from .flag import FLAG_T
-from .structs import PageSizerFactory, PaginationMessage, FetcherIter, DefaultFactory
+from .i18n import DEFAULT_I18N, I18N_Text, PaginatorInternalI18N
 from .page_sizer import counting_page_sizer
+from .structs import DefaultFactory, FetcherIter, PageSizerFactory, PaginationMessage
 
 if typing.TYPE_CHECKING:
     from .manager import ABCPageBuilder

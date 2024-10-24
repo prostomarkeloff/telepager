@@ -1,16 +1,8 @@
 """
 Here is the example of paginator with filtering and ordering
 """
-
-import typing
-from telepager.flag import Quality, Ordering
-from telepager import (
-    Paginator,
-    PaginatorSettings,
-    NaivePageBuilder,
-    FetcherIter,
-    Line,
-)
+from telepager import FetcherIter, Line, NaivePageBuilder, Paginator, PaginatorSettings
+from telepager.flag import Ordering, Quality
 
 type MetaT = (
     int  # for our current example the `meta` will be just a number. needed for ordering
@@ -38,6 +30,11 @@ class Filters(Quality):
     def shown_name(self, language_code: str) -> str:
         # here we should send name of a filter, according to user's language code
         # i won't make a lot, only for English
+        if language_code != "en":
+            raise RuntimeError(
+                f"User with language code {language_code} tried to use paginator."
+            )
+
         match self:
             case self.EVEN:
                 return "Even"

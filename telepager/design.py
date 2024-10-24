@@ -3,11 +3,10 @@ import typing
 
 from telegrinder import InlineButton, InlineKeyboard
 
-from .settings import PaginatorSettings
+from .flag import ANY_QUALITY, FLAG_T
 from .i18n import PossibleTexts
 from .manager import PageBook
-from .flag import ANY_QUALITY, FLAG_T
-
+from .settings import PaginatorSettings
 from .structs import FORCE_FETCH_ALL, PaginationMessage
 
 if typing.TYPE_CHECKING:

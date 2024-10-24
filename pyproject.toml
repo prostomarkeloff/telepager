@@ -12,6 +12,7 @@ telegrinder = { git = "https://github.com/timoniq/telegrinder.git", branch = "de
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.5"
+isort = "^5.13.2"
 
 [build-system]
 requires = ["poetry-core"]
