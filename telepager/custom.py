@@ -1,7 +1,7 @@
 import typing
 from fntypes import Error, Ok
 from telegrinder import CallbackQuery, Context, Dispatch
-from telegrinder.rules import CallbackDataEq, CallbackQueryDataRule
+from telegrinder.rules import PayloadEqRule, CallbackQueryDataRule
 
 if typing.TYPE_CHECKING:
     from telepager import Paginator
@@ -29,6 +29,6 @@ class TelepagerMessage[T](CallbackQueryDataRule):
 
 
 def setup_empty_callback_data_handler[T](paginator: "Paginator[T]", dp: Dispatch):
-    @dp.callback_query(CallbackDataEq(paginator.settings.empty_callback_data))
+    @dp.callback_query(PayloadEqRule(paginator.settings.empty_callback_data))
     async def _(query: CallbackQuery):
         await query.answer()
