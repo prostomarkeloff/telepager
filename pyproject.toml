@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-telegrinder = { git = "https://github.com/timoniq/telegrinder.git", rev = "11b0faf" }
+telegrinder = { git = "https://github.com/timoniq/telegrinder.git", rev = "b796d39" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.5"
