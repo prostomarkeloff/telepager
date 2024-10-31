@@ -147,6 +147,7 @@ class RecordManager[T]:
             )
         ]
         page_book = [page for page in page_book if page]
-        self.fetcher._average_page_size = len(filtered_lines) // len(page_book)  # type: ignore
+        if len(page_book):
+            self.fetcher._average_page_size = len(filtered_lines) // len(page_book)  # type: ignore
 
         return page_book
