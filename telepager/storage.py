@@ -32,14 +32,14 @@ class InMemoryExpiringStorage[T](ABCExpiringStorage[T]):
 
     def get_record(self, owner_id: int, record_id: int) -> Record[T] | None:
         if owner_id not in self._inner:
-            return
+            return None
 
         record = self._inner[owner_id].get(record_id)
         if not record:
-            return
+            return None
         is_expired = datetime.datetime.now() >= record.expiration_date
         if is_expired:
             del self._inner[owner_id][record_id]
-            return
+            return None
 
         return record

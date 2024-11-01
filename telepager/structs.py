@@ -59,9 +59,16 @@ class Record[T]:
         if records_of_user := storage.get_all_records_of_user(
             values.get("owner_id", ANY_USER)
         ):
-            record_id = typing.cast(
-                int,
-                max(records_of_user, key=records_of_user.get) + 1,  # type: ignore
+            record_id = (
+                records_of_user[
+                    (
+                        max(
+                            records_of_user,
+                            key=lambda key: records_of_user[key].record_id,
+                        )
+                    )
+                ].record_id
+                + 1
             )
         else:
             record_id = 0
@@ -88,6 +95,6 @@ type LinesFittingToPage[T] = list[Line[T]]
 type PageSizer[T, *Args] = typing.Callable[
     [list[Line[T]], *Args], typing.Iterator[LinesFittingToPage[T]]
 ]
-type PageSizerFactory[T, *Args] = typing.Callable[[], PageSizer[list[Line[T]], *Args]]
+type PageSizerFactory[T, *Args] = typing.Callable[[], PageSizer[T, *Args]]
 
 type DefaultFactory[T] = typing.Callable[[], T]
