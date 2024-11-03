@@ -1,10 +1,56 @@
 import typing
-from fntypes import Error, Ok
+from fntypes import Error, Ok, Result
 from telegrinder import CallbackQuery, Context, Dispatch
 from telegrinder.rules import PayloadEqRule, CallbackQueryDataRule
+from telegrinder.tools.callback_data_serilization import ABCDataSerializer
 
 if typing.TYPE_CHECKING:
     from telepager import Paginator
+    from telepager import PaginationMessage
+
+
+def parse_callback_data(inp: str) -> tuple[str, list[str]]:
+    parts = inp.split("_")
+    name = parts[0]
+    args: list[str]
+    try:
+        args = parts[1:]
+    except IndexError:
+        args = []
+    return name, args
+
+
+class TelepagerSerializer(ABCDataSerializer["PaginationMessage"]):
+    def __init__(self) -> None:
+        self.ident_key = "tpgr"
+
+    def serialize(self, data: "PaginationMessage") -> str:
+        return f"{data.name}_{data.user_id}_{data.record_id}_{data.page}_{data.quality}_{data.ordering}_{int(data.show_all_filters)}_{int(data.show_all_ordering)}"
+
+    def deserialize(self, serialized_data: str) -> Result["PaginationMessage", str]:
+        from telepager import PaginationMessage
+
+        name, args = parse_callback_data(serialized_data)
+        if len(args) != 7:
+            return Error("That's not a pagination message")
+        user_id = int(args[0])
+        record_id = int(args[1])
+        page = int(args[2])
+        quality = int(args[3])
+        ordering = int(args[4])
+        show_all_filters = bool(int(args[5]))
+        show_all_ordering = bool(int(args[6]))
+
+        return Ok(PaginationMessage(
+            name,
+            user_id,
+            record_id,
+            page,
+            quality,
+            ordering,
+            show_all_filters,
+            show_all_ordering,
+        ))
 
 
 class TelepagerMessage[T](CallbackQueryDataRule):

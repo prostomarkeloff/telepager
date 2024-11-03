@@ -20,7 +20,7 @@ from .filtered import paginator
 
 api = API(token=Token.from_env())
 bot = Telegrinder(api)
-logger.set_level("INFO")
+logger.set_level("DEBUG")
 
 # some buttons are not touchable. let telepager handle them with simple `callback_query.answer()`
 setup_empty_callback_data_handler(paginator, bot.dispatch)

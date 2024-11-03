@@ -9,6 +9,7 @@ from .flag import FLAG_T
 from .i18n import DEFAULT_I18N, I18N_Text, PaginatorInternalI18N
 from .page_sizer import counting_page_sizer
 from .structs import DefaultFactory, FetcherIter, PageSizerFactory, PaginationMessage
+from .custom import TelepagerSerializer
 
 if typing.TYPE_CHECKING:
     from .manager import ABCPageBuilder
@@ -24,9 +25,7 @@ class PaginatorSettings[T]:
     page_size: dataclasses.InitVar[int] = 20
     page_sizer_factory: PageSizerFactory[T] | None = None
     incremental_fetching_step: int = 1000  # 1000 lines
-    serializer: ABCDataSerializer[PaginationMessage] = MsgPackSerializer(
-        PaginationMessage
-    )
+    serializer: ABCDataSerializer[PaginationMessage] = TelepagerSerializer()
     i18n: PaginatorInternalI18N = dataclasses.field(
         default_factory=lambda: DEFAULT_I18N
     )
