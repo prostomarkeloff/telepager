@@ -19,9 +19,9 @@ class PossibleTexts(enum.Enum):
 
 
 DEFAULT_I18N = {
-    PossibleTexts.ORDERING: {"ru": "Сортировка", "en": "Ordering"},
-    PossibleTexts.QUALITIES: {"ru": "Фильтры", "en": "Filters"},
-    PossibleTexts.ALL_QUALITIES: {"ru": "Все", "en": "All"},
+    PossibleTexts.ORDERING: {"ru": "Сортировка", "en": "Ordering", "es": "Ordenar"},
+    PossibleTexts.QUALITIES: {"ru": "Фильтры", "en": "Filters", "es": "Filtros"},
+    PossibleTexts.ALL_QUALITIES: {"ru": "Все", "en": "All", "es": "Todos"},
 }
 
 type PaginatorInternalI18N = dict[PossibleTexts, dict[LANG_CODE, str]]
