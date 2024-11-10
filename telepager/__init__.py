@@ -1,8 +1,3 @@
-from .custom import TelepagerMessage, setup_empty_callback_data_handler
-from .manager import ABCPageBuilder, FormattingPageBuilder, NaivePageBuilder
-from .paginator import Paginator
-from .settings import PaginatorSettings
-from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 from .structs import (
     ANY_ORDERING,
     ANY_QUALITY,
@@ -13,6 +8,12 @@ from .structs import (
     PageBook,
     PaginationMessage,
 )
+from .paginator import Paginator
+from .storage import ABCExpiringStorage, InMemoryExpiringStorage
+from .manager import ABCPageBuilder, FormattingPageBuilder, NaivePageBuilder
+from .settings import PaginatorSettings
+from .custom import TelepagerMessage, setup_empty_callback_data_handler, static_texts_paginator
+
 
 __all__ = (
     "Paginator",
@@ -32,4 +33,5 @@ __all__ = (
     "setup_empty_callback_data_handler",
     "ABCExpiringStorage",
     "InMemoryExpiringStorage",
+    "static_texts_paginator"
 )

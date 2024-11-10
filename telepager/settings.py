@@ -3,7 +3,7 @@ import datetime
 import functools
 import typing
 
-from telegrinder.tools import ABCDataSerializer, MsgPackSerializer
+from telegrinder.tools import ABCDataSerializer
 
 from .flag import FLAG_T
 from .i18n import DEFAULT_I18N, I18N_Text, PaginatorInternalI18N

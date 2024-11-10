@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "telepager"
-version = "1.1.0"
+version = "1.1.5"
 description = "A fancy paginator for your Telegram bots"
 authors = ["prostomarkeloff"]
 license = "MIT"

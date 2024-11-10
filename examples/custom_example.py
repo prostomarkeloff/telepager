@@ -7,22 +7,21 @@ from telegrinder import (
     Telegrinder,
     Token,
 )
-from telegrinder.modules import logger
 from telegrinder.rules import StartCommand
 
 from telepager import (
     PaginationMessage,
     TelepagerMessage,
     setup_empty_callback_data_handler,
+    static_texts_paginator
 )
 
-from examples.filtered import paginator
+DATA = [f"This is a {i}th message!" for i in range(1, 1000)]
 
 api = API(token=Token.from_env())
 bot = Telegrinder(api)
-logger.set_level("DEBUG")
 
-# some buttons are not touchable. let telepager handle them with simple `callback_query.answer()`
+paginator = static_texts_paginator("static", "Messages:" ,DATA)
 setup_empty_callback_data_handler(paginator, bot.dispatch)
 
 
