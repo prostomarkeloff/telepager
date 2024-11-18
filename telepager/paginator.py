@@ -1,4 +1,5 @@
 import datetime
+from re import A
 import typing
 
 from telegrinder import (
@@ -36,6 +37,7 @@ def _get_ctx_api_and_chat_id_from_event(
     else:
         return event.api, event.from_user.id
 
+EventOrPairT = (MessageCute | CallbackQueryCute | InlineQueryCute) | tuple[API, int]
 
 class Paginator[T]:
     def __init__(
@@ -55,6 +57,7 @@ class Paginator[T]:
         ctx_api: API,
         text: str,
         keyboard: InlineKeyboard | None = None,
+        **telegram_api_additional: typing.Any,
     ):
         if not record.last_message_id_to_edit:
             result = await ctx_api.send_message(
@@ -63,6 +66,7 @@ class Paginator[T]:
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
                 disable_web_page_preview=True,
+                **telegram_api_additional
             )
             record.last_message_id_to_edit = result.unwrap().message_id
         else:
@@ -73,6 +77,7 @@ class Paginator[T]:
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
                 disable_web_page_preview=True,
+                **telegram_api_additional
             )
 
     async def _get_page_book(
@@ -106,7 +111,7 @@ class Paginator[T]:
 
     async def send_paginated(
         self,
-        event: MessageCute | CallbackQueryCute | InlineQueryCute,
+        event_or_pair: EventOrPairT,
         asked: PaginationMessage,
         fetcher_iter: FetcherIter[T] | None = None,
         builder: ABCPageBuilder[T] | None = None,
@@ -114,10 +119,14 @@ class Paginator[T]:
         language_code: str | None = None,
         extend_keyboard: InlineKeyboard | None = None,
         ttl: datetime.timedelta | None = None,
+        **telegram_api_additional: typing.Any,
     ) -> bool:
         keyboard = InlineKeyboard()
 
-        ctx_api, chat_id = _get_ctx_api_and_chat_id_from_event(event)
+        if isinstance(event_or_pair, tuple):
+            ctx_api, chat_id = event_or_pair[0], event_or_pair[1]
+        else:
+            ctx_api, chat_id = _get_ctx_api_and_chat_id_from_event(event_or_pair)
 
         if not fetcher_iter:
             fetcher_iter = (
@@ -179,6 +188,7 @@ class Paginator[T]:
                     text=internationalize(empty_page_book_text, language_code),
                     parse_mode=HTMLFormatter.PARSE_MODE,
                     disable_web_page_preview=True,
+                    **telegram_api_additional
                 )
             # if there is no pages for asked quality
             else:
@@ -189,6 +199,7 @@ class Paginator[T]:
                     record=record,
                     text=page.text,
                     keyboard=keyboard,
+                    **telegram_api_additional
                 )
             return False
 
