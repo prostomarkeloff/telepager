@@ -29,7 +29,7 @@ def add_ordering_buttons[T](
 
         current_keyboard.add(
             InlineButton(
-                text=f"{settings.i18n[PossibleTexts.ORDERING].setdefault(language_code, DEFAULT_LANG_CODE)} ⬇️",
+                text=f"{settings.i18n[PossibleTexts.ORDERING].get(language_code, DEFAULT_LANG_CODE)} ⬇️",
                 callback_data=message,
                 callback_data_serializer=settings.serializer,
             )
@@ -41,7 +41,7 @@ def add_ordering_buttons[T](
 
         current_keyboard.add(
             InlineButton(
-                text=f"{settings.i18n[PossibleTexts.ORDERING].setdefault(language_code, DEFAULT_LANG_CODE)} ⬆️",
+                text=f"{settings.i18n[PossibleTexts.ORDERING].get(language_code, DEFAULT_LANG_CODE)} ⬆️",
                 callback_data=message,
                 callback_data_serializer=settings.serializer,
             )
@@ -83,7 +83,7 @@ def add_filters_buttons[T](
 
         current_keyboard.add(
             InlineButton(
-                text=f"{settings.i18n[PossibleTexts.QUALITIES].setdefault(language_code, DEFAULT_LANG_CODE)} ⬇️",
+                text=f"{settings.i18n[PossibleTexts.QUALITIES].get(language_code, DEFAULT_LANG_CODE)} ⬇️",
                 callback_data=message,
                 callback_data_serializer=settings.serializer,
             )
@@ -95,7 +95,7 @@ def add_filters_buttons[T](
 
         current_keyboard.add(
             InlineButton(
-                text=f"{settings.i18n[PossibleTexts.QUALITIES].setdefault(language_code, DEFAULT_LANG_CODE)} ⬆️",
+                text=f"{settings.i18n[PossibleTexts.QUALITIES].get(language_code, DEFAULT_LANG_CODE)} ⬆️",
                 callback_data=message,
                 callback_data_serializer=settings.serializer,
             )
@@ -103,13 +103,13 @@ def add_filters_buttons[T](
 
         if pagination_message.quality == ANY_QUALITY:
             all_qualities_text = (
-                f"📍 {settings.i18n[PossibleTexts.ALL_QUALITIES].setdefault(language_code, DEFAULT_LANG_CODE)}"
+                f"📍 {settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE)}"
             )
             all_qualities_callback_data = "empty"
             serializer = None
         else:
             all_qualities_text = (
-                f"{settings.i18n[PossibleTexts.ALL_QUALITIES].setdefault(language_code, DEFAULT_LANG_CODE)}"
+                f"{settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE))}"
             )
             all_qualities_callback_data = pagination_message.copy_with_changed_fields(
                 page=0,
