@@ -1,5 +1,4 @@
 import datetime
-from re import A
 import typing
 
 from telegrinder import (
@@ -65,7 +64,6 @@ class Paginator[T]:
                 text=text,
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
-                disable_web_page_preview=True,
                 **telegram_api_additional
             )
             record.last_message_id_to_edit = result.unwrap().message_id
@@ -76,7 +74,6 @@ class Paginator[T]:
                 message_id=record.last_message_id_to_edit,
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
-                disable_web_page_preview=True,
                 **telegram_api_additional
             )
 
@@ -187,7 +184,6 @@ class Paginator[T]:
                     chat_id=chat_id,
                     text=internationalize(empty_page_book_text, language_code),
                     parse_mode=HTMLFormatter.PARSE_MODE,
-                    disable_web_page_preview=True,
                     **telegram_api_additional
                 )
             # if there is no pages for asked quality
