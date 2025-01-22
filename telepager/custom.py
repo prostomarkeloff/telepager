@@ -92,8 +92,10 @@ def static_texts_paginator(
 
     paginator = Paginator(
         settings=PaginatorSettings(
-            name, default_fetcher_factory=lambda: _static_fetcher(), page_size=page_size,
-            default_page_builder=NaivePageBuilder(base_text)
+            name,
+            default_fetcher_factory=lambda: _static_fetcher(),
+            page_size=page_size,
+            default_page_builder=NaivePageBuilder(base_text),
         )
     )
 

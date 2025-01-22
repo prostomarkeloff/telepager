@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "telepager"
-version = "1.3.2"
+version = "1.4.0"
 description = "A fancy paginator for your Telegram bots"
 authors = ["prostomarkeloff"]
 license = "MIT"
@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-telegrinder = { git = "https://github.com/timoniq/telegrinder", rev = "d5a0695" }
+telegrinder = { git = "https://github.com/timoniq/telegrinder", rev = "c2a0d7f" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.5"

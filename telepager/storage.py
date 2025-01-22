@@ -23,7 +23,7 @@ class InMemoryExpiringStorage[T](ABCExpiringStorage[T]):
         self._inner: dict[UserId, dict[RecordId, Record[T]]] = {}
 
     def put(self, record: Record[T]):
-        if not record.owner_id in self._inner:
+        if record.owner_id not in self._inner:
             self._inner[record.owner_id] = {}
         self._inner[record.owner_id][record.record_id] = record
 

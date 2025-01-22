@@ -102,15 +102,11 @@ def add_filters_buttons[T](
         ).row()
 
         if pagination_message.quality == ANY_QUALITY:
-            all_qualities_text = (
-                f"📍 {settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE)}"
-            )
+            all_qualities_text = f"📍 {settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE)}"
             all_qualities_callback_data = "empty"
             serializer = None
         else:
-            all_qualities_text = (
-                f"{settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE)}"
-            )
+            all_qualities_text = f"{settings.i18n[PossibleTexts.ALL_QUALITIES].get(language_code, DEFAULT_LANG_CODE)}"
             all_qualities_callback_data = pagination_message.copy_with_changed_fields(
                 page=0,
                 quality=ANY_QUALITY,

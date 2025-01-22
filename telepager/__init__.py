@@ -12,7 +12,11 @@ from .paginator import Paginator
 from .storage import ABCExpiringStorage, InMemoryExpiringStorage
 from .manager import ABCPageBuilder, FormattingPageBuilder, NaivePageBuilder
 from .settings import PaginatorSettings
-from .custom import TelepagerMessage, setup_empty_callback_data_handler, static_texts_paginator
+from .custom import (
+    TelepagerMessage,
+    setup_empty_callback_data_handler,
+    static_texts_paginator,
+)
 
 
 __all__ = (
@@ -33,5 +37,5 @@ __all__ = (
     "setup_empty_callback_data_handler",
     "ABCExpiringStorage",
     "InMemoryExpiringStorage",
-    "static_texts_paginator"
+    "static_texts_paginator",
 )

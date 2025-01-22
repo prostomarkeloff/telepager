@@ -36,7 +36,9 @@ def _get_ctx_api_and_chat_id_from_event(
     else:
         return event.api, event.from_user.id
 
+
 EventOrPairT = (MessageCute | CallbackQueryCute | InlineQueryCute) | tuple[API, int]
+
 
 class Paginator[T]:
     def __init__(
@@ -195,7 +197,7 @@ class Paginator[T]:
                     record=record,
                     text=page.text,
                     keyboard=keyboard,
-                    **telegram_api_additional
+                    **telegram_api_additional,
                 )
             return False
 
