@@ -220,6 +220,7 @@ class Paginator[T]:
             record=record,
             text=asked_page.text,
             keyboard=keyboard,
+            **telegram_api_additional,
         )
 
         return True
