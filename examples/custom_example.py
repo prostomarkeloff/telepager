@@ -13,7 +13,7 @@ from telepager import (
     PaginationMessage,
     TelepagerMessage,
     setup_empty_callback_data_handler,
-    static_texts_paginator
+    static_texts_paginator,
 )
 
 DATA = [f"This is a {i}th message!" for i in range(1, 1000)]
@@ -21,7 +21,7 @@ DATA = [f"This is a {i}th message!" for i in range(1, 1000)]
 api = API(token=Token.from_env())
 bot = Telegrinder(api)
 
-paginator = static_texts_paginator("static", "Messages:" ,DATA)
+paginator = static_texts_paginator("static", "Messages:", DATA)
 setup_empty_callback_data_handler(paginator, bot.dispatch)
 
 

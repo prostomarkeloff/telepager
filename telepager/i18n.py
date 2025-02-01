@@ -1,12 +1,12 @@
 import enum
 import typing
 
-type LANG_CODE = str
-type I18N_Text = str | typing.Callable[[LANG_CODE], str]
-DEFAULT_LANG_CODE = "en"
+type LANGUAGE_CODE = str
+type I18N_Text = str | typing.Callable[[LANGUAGE_CODE], str]
+DEFAULT_LANGUAGE_CODE = "en"
 
 
-def internationalize(text: I18N_Text, language_code: LANG_CODE) -> str:
+def internationalize(text: I18N_Text, language_code: LANGUAGE_CODE) -> str:
     if isinstance(text, str):
         return text
     return text(language_code)
@@ -24,4 +24,4 @@ DEFAULT_I18N = {
     PossibleTexts.ALL_QUALITIES: {"ru": "Все", "en": "All", "es": "Todos"},
 }
 
-type PaginatorInternalI18N = dict[PossibleTexts, dict[LANG_CODE, str]]
+type PaginatorInternalI18N = dict[PossibleTexts, dict[LANGUAGE_CODE, str]]

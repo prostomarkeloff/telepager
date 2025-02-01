@@ -66,7 +66,7 @@ class Paginator[T]:
                 text=text,
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
-                **telegram_api_additional
+                **telegram_api_additional,
             )
             record.last_message_id_to_edit = result.unwrap().message_id
         else:
@@ -76,7 +76,7 @@ class Paginator[T]:
                 message_id=record.last_message_id_to_edit,
                 reply_markup=keyboard.get_markup() if keyboard else None,
                 parse_mode=HTMLFormatter.PARSE_MODE,
-                **telegram_api_additional
+                **telegram_api_additional,
             )
 
     async def _get_page_book(
@@ -186,7 +186,7 @@ class Paginator[T]:
                     chat_id=chat_id,
                     text=internationalize(empty_page_book_text, language_code),
                     parse_mode=HTMLFormatter.PARSE_MODE,
-                    **telegram_api_additional
+                    **telegram_api_additional,
                 )
             # if there is no pages for asked quality
             else:
