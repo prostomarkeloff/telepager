@@ -1,6 +1,7 @@
 """
 Here is the example of paginator with filtering and ordering
 """
+
 from telepager import FetcherIter, Line, NaivePageBuilder, Paginator, PaginatorSettings
 from telepager.flag import Ordering, Quality
 

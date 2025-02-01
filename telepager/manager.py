@@ -102,12 +102,26 @@ class NaivePageBuilder[T](ABCPageBuilder[T]):
 
 
 class FormattingPageBuilder[T](ABCPageBuilder[T]):
-    def __init__(self, base_text: str, formatting_template_name: str) -> None:
+    def __init__(
+        self,
+        base_text: str,
+        formatting_template_name: str,
+        empty_page_format_text: str | None = None,
+    ) -> None:
         self.base_text = base_text
         self.formatting_template_name = formatting_template_name
 
+        self.empty_page_format_text = empty_page_format_text
+
     async def empty_page(self) -> Page:
-        return Page(self.base_text.strip(self.formatting_template_name))
+        if self.empty_page_format_text is None:
+            text = self.base_text.replace(self.formatting_template_name, str())
+        else:
+            text = self.base_text.format(
+                **{self.formatting_template_name: self.empty_page_format_text}
+            )
+
+        return Page(text)
 
     async def build_page(self, lines: list[Line[T]]) -> Page | None:
         if not lines:
