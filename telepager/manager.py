@@ -115,7 +115,7 @@ class FormattingPageBuilder[T](ABCPageBuilder[T]):
 
     async def empty_page(self) -> Page:
         if self.empty_page_format_text is None:
-            text = self.base_text.replace(self.formatting_template_name, str())
+            text = self.base_text.format(**{self.formatting_template_name: str()})
         else:
             text = self.base_text.format(
                 **{self.formatting_template_name: self.empty_page_format_text}
