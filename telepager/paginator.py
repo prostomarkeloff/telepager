@@ -117,6 +117,7 @@ class Paginator[T]:
         empty_page_book_text: I18N_Text | None = None,
         language_code: str | None = None,
         extend_keyboard: InlineKeyboard | None = None,
+        send_keyboard_with_empty_page: bool = False,
         ttl: datetime.timedelta | None = None,
         **telegram_api_additional: typing.Any,
     ) -> bool:
@@ -182,10 +183,15 @@ class Paginator[T]:
         if not page_book:
             # if there is no pages AT ALL
             if empty_page_book_text and asked.quality == ANY_QUALITY:
+                reply_markup = None
+                if send_keyboard_with_empty_page:
+                    reply_markup = extend_keyboard.get_markup() if extend_keyboard else None
+
                 await ctx_api.send_message(
                     chat_id=chat_id,
                     text=internationalize(empty_page_book_text, language_code),
                     parse_mode=HTMLFormatter.PARSE_MODE,
+                    reply_markup=reply_markup,
                     **telegram_api_additional,
                 )
             # if there is no pages for asked quality
