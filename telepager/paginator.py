@@ -26,6 +26,16 @@ def _not_loaded_defaults_exception(name: str) -> typing.NoReturn:
     )
 
 
+def _validate_additional_args(additional_args: dict[str, typing.Any]) -> None | typing.NoReturn:
+    args_set = set(additional_args.keys())
+    banned_args = {"text", "chat_id", "reply_markup", "parse_mode"}
+    args_intersection = args_set.intersection(banned_args)
+    if args_intersection:
+        raise ValueError(
+            f"You can't pass the following arguments to 'send_paginated': {', '.join(args_intersection)}"
+        )
+
+
 def _get_ctx_api_and_chat_id_from_event(
     event: MessageCute | CallbackQueryCute | InlineQueryCute,
 ) -> tuple[API, int]:
@@ -117,9 +127,12 @@ class Paginator[T]:
         empty_page_book_text: I18N_Text | None = None,
         language_code: str | None = None,
         extend_keyboard: InlineKeyboard | None = None,
+        empty_page_book_keyboard: InlineKeyboard | None = None,
         ttl: datetime.timedelta | None = None,
         **telegram_api_additional: typing.Any,
     ) -> bool:
+        _validate_additional_args(telegram_api_additional)
+
         keyboard = InlineKeyboard()
 
         if isinstance(event_or_pair, tuple):
@@ -186,6 +199,7 @@ class Paginator[T]:
                     chat_id=chat_id,
                     text=internationalize(empty_page_book_text, language_code),
                     parse_mode=HTMLFormatter.PARSE_MODE,
+                    reply_markup=empty_page_book_keyboard.get_markup() if empty_page_book_keyboard else None,
                     **telegram_api_additional,
                 )
             # if there is no pages for asked quality
