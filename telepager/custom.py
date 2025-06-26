@@ -2,7 +2,7 @@ import typing
 from fntypes import Error, Ok, Result
 from telegrinder import CallbackQuery, Context, Dispatch
 from telegrinder.rules import PayloadEqRule, CallbackQueryDataRule
-from telegrinder.tools.callback_data_serilization import ABCDataSerializer
+from telegrinder.tools.callback_data_serialization import ABCDataSerializer
 from telepager import PaginationMessage
 from telepager.structs import FetcherIter, Line
 
